@@ -1,0 +1,1 @@
+<?php header('Location: /pickle-rick-pong.html') ?>
