@@ -150,11 +150,11 @@
 			<p>Press Enter/Esc to Pause game.</p>
 		</div>
 		<div class="sound-controls">
-			<audio id="theme" src="http://yt-files.com/yt-dd.php?id=wh10k2LPZiI&hash=aa20a3b311904f79ded8f35cb5121a67&name=Rick and Morty Theme Song [HD]">
+			<audio id="theme" src="https://www.televisiontunes.com/uploads/audio/Rick and Morty.mp3" muted>
 			</audio>
 
-			<span>Sound Controls</span><br>
-			<button class="btn btn-warning glyphicon glyphicon-volume-up" id="mute_btn"></button>
+			<span>Music Controls</span><br>
+			<button class="btn btn-warning glyphicon glyphicon-volume-off" id="mute_btn"></button>
 			<button class="btn btn btn-warning glyphicon glyphicon-plus-sign" id="volume_up"></button>
 			<button class="btn btn btn-warning glyphicon glyphicon-minus-sign" id="volume_down"></button>
 		</div>
@@ -240,7 +240,7 @@
 		var numOfImages=4;
 		var images={};
 		images.background= new Image();
-		images.background.src= "https://2static.fjcdn.com/large/pictures/e9/95/e995f5_5964659.jpg";
+		images.background.src= "assets/images/Rick-and-Morty-Background.jpg";
 		images.p1= new Image();
 		images.p1.src= "https://image.ibb.co/kvFH4Q/p1.png";
 		images.p2= new Image();
@@ -298,8 +298,10 @@
 
 			//canvas size
 			var ctx=canvas.getContext('2d');
-			canvas.width=images.background.width*0.75 || 600;
-			canvas.height=images.background.height*0.75 || 800;
+			var aspectRatio=images.background.width/images.background.height;
+
+			canvas.width=window.innerWidth * 0.7; // 600 * aspectRatio;
+			canvas.height=canvas.width/aspectRatio;
 
 			//Settings
 			var fps		=	35;
@@ -533,7 +535,7 @@
 				ctx.fillText('Player 2:', 3*cWidth/4, cHeight/8);
 				ctx.font= '80px arial';
 				ctx.fillText(p1.points, cWidth/4, cHeight/8 + 70);
-				ctx.fillText(p2.points, 3*cWidth/4, cHeight/8 + 70);
+				ctx.fillText(p2.points, 3*cWidth/4, cHeight/8 + 70);/**/
 				ctx.font="20px arial";
 				ctx.fillText('By Natanel Mizrahi', cWidth-140, cHeight-5);
 			}
@@ -788,22 +790,20 @@
 			}
 
 			$(document).ready(function(){
-				$("#graphics").change(function(){
-						if($(this).prop("checked"))
-							$('#theme')[0].play();
-						else 
-							$('#theme')[0].pause();
-				});
 				$('#theme').prop('volume', 0.2);
 				$('#theme').prop('autoplay', autoplay ? true:false);
 				$('#theme').prop('loop', true);
 				$('#theme').prop('currentTime', 8.4);
 
-				$('#mute_btn').click(function(){	
-					//$(this).html($(this).html()=='Mute'? 'Unmute': 'Mute');
+				$('#mute_btn').click(function(){
+					let muted = $('#theme').prop("muted");
 					$(this).toggleClass("glyphicon glyphicon-volume-up");
 					$(this).toggleClass("glyphicon glyphicon-volume-off");
-					$('#theme').prop("muted", !$('#theme').prop("muted"));
+					$('#theme').prop("muted", !muted);
+					if (muted)
+						$('#theme')[0].play();
+					else
+						$('#theme')[0].pause();
 				});
 				$('#volume_up').click(function(){
 					$('#theme')[0].volume+=0.05;

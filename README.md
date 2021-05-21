@@ -7,11 +7,11 @@ The popular arcade pong with a "Rick and Morty" twist.
 
 **About**
 
-My first project as a developer, comments and reviews will be appreciated :)
+My first project as a developer.
 
 I tried to make it in a single file without having to download any audio/images.
 
-:heavy_exclamation_mark: **TIP**: The music can become annoying after a couple of minutes, the bottom left button :loudspeaker: icon toggles the background music.
+:loudspeaker: icon toggles the background music.
 
 Also, the game is designed for children, so I recommend setting the difficulty to hard/ insane.
 
@@ -26,7 +26,6 @@ Also, the game is designed for children, so I recommend setting the difficulty t
 
 
 **Future updates:**
-* Bootstrap glyphicon fix
 * Random game events (portals, powerups etc.)
 * Additional audio files to be played when players score
 
