@@ -169,12 +169,172 @@
 		<h1>Loading...</h1>
 		<p id="imgLoad">Graphics: 0%</p>
 		<p id="audioLoad">Audio: 0%</p>
-		<br>
-		<p style="color:red;">Tip: MUTE THE MUSIC if it becomes annoying after a while :)</p>
 	</div>		
 
 	<script>
 		//Load images & audio files
+		function drawImage(ctx, image, x, y, w, h, crop="") {
+			ctx.save();
+			ctx.translate(x, y);
+			if (crop === "LEFT"){
+				ctx.drawImage(image, image.width/2,0,image.width, image.height, 0, -h/2, w, h);
+			} else if (crop === "RIGHT") {
+				ctx.drawImage(image, 0,0,image.width/2, image.height, -w/2, -h/2, w/2, h);
+			} else {
+				ctx.drawImage(image, 0,0,image.width, image.height, -w/2, -h/2, w, h);
+			}
+			ctx.restore();
+		}
+		class Portal {
+			static PLAYER_MARGIN_WIDTH = 200;
+			static MIN_PORTAL_DISTANCE = 150;
+			static MIN_PORTAL_HEIGHT_FACTOR = 5;
+			static MAX_PORTAL_HEIGHT_FACTOR = 20;
+			static MIN_PORTAL_WIDTH_FACTOR = 3;
+			static MAX_PORTAL_WIDTH_FACTOR = 5;
+			static MIN_PORTAL_DURATION = 50;
+			static MAX_PORTAL_DURATION = 300;
+			static MAX_PORTAL_DELAY = 0;
+
+
+			static LEFT = "LEFT";
+			static RIGHT = "RIGHT";
+			constructor(canvas , ball) {
+				this.canvas = canvas;
+				this.ctx = canvas.getContext('2d');
+				this.ball = ball;
+				this.ballEnteredPortal = false;
+				this.ballInPortal = null;
+				this.ballOutPortal = null;
+				this.randomizeParams();
+			}
+			randomizeDims(){
+				let minPortalHeight = Math.floor(this.ball.radius * Portal.MIN_PORTAL_HEIGHT_FACTOR);
+				let maxPortalHeight = Math.floor(this.ball.radius * Portal.MAX_PORTAL_HEIGHT_FACTOR);
+				let minPortalWidth = Math.floor(this.ball.radius * Portal.MIN_PORTAL_WIDTH_FACTOR);
+				let maxPortalWidth = Math.floor(this.ball.radius * Portal.MAX_PORTAL_WIDTH_FACTOR);
+				this.width = this.randomInRange(minPortalWidth, maxPortalWidth);
+				this.height= this.randomInRange(minPortalHeight, maxPortalHeight);
+			}
+			randomizeParams() {
+				this.randomizeDims();
+				this.randomizeCoordinates();
+				this.randomizeDuration();
+			}
+			randomizeXCoordinates(){
+				let minPortalXMargin = Portal.PLAYER_MARGIN_WIDTH + (this.width / 2);
+				let minLeftPortalX = minPortalXMargin;
+				let maxRightPortalX = this.canvas.width - minPortalXMargin;
+				let minPortalCentersDistance = Portal.MIN_PORTAL_DISTANCE + this.width;
+				let maxLeftPortalX = this.canvas.width - (minPortalXMargin + minPortalCentersDistance);
+				this.leftPortalX = this.randomInRange(minLeftPortalX, maxLeftPortalX);
+				let minRightPortalX = this.leftPortalX + minPortalCentersDistance;
+				if (minRightPortalX > maxRightPortalX) minRightPortalX = maxRightPortalX;
+				this.rightPortalX = this.randomInRange(minRightPortalX, maxRightPortalX);
+			}
+			randomizeYCoordinates(){
+				let minPortalY = this.height / 2;
+				let maxPortalY = this.canvas.height - minPortalY;
+				this.leftPortalY = this.randomInRange(minPortalY, maxPortalY);
+				this.rightPortalY = this.randomInRange(minPortalY, maxPortalY);
+			}
+			randomizeCoordinates(){
+				this.randomizeYCoordinates();
+				this.randomizeXCoordinates();
+				this.coordinates = {};
+				this.coordinates[Portal.LEFT]  = {x: this.leftPortalX,  y: this.leftPortalY };
+				this.coordinates[Portal.RIGHT] = {x: this.rightPortalX, y: this.rightPortalY};
+			}
+			randomInRange(low, high){
+				return Math.floor(Math.random() * (high- low)) + low;
+			}
+
+			randomizeDuration() {
+				this.delay = this.randomInRange(0,Portal.MAX_PORTAL_DELAY);
+				this.duration = this.randomInRange(Portal.MIN_PORTAL_DURATION,Portal.MAX_PORTAL_DURATION);
+			}
+
+			drawPortal() {
+				drawImage(this.ctx, images.portal, this.leftPortalX, this.leftPortalY, this.width, this.height);
+				drawImage(this.ctx, images.portal, this.rightPortalX, this.rightPortalY, this.width, this.height);
+				this.drawBall();
+			}
+			pointInsidePortal(x, y, padding=0){
+				// The region bounded by the ellipse centered at (h,k), with semi-major axis rx, semi-minor axis ry
+				// is given by the equation (x-h)^2/rx^2 + (y-k)^2/ry^2 <=1
+				let sq = n => Math.pow(n,2);
+				let rx = this.width/2 - padding;
+				let ry = this.height/2 - padding;
+				for (let portal in this.coordinates) {
+					let h = this.coordinates[portal].x;
+					let k = this.coordinates[portal].y;
+					if (sq(x-h)/sq(rx) + sq(y-k)/sq(ry) <= 1)
+						return portal;
+				}
+				return null;
+			}
+			teleportBall(){
+				if (!this.ballEnteredPortal) {
+					this.ballOnRightSide = this.coordinates[this.ballInPortal].x <= this.ball.x;
+					this.ballEnteredPortal = true;
+				}
+				let ballX = this.ball.x;
+				let ballY = this.ball.y;
+				let ballRelativeX = this.coordinates[this.ballInPortal].x - ballX;
+				let ballRelativeY = this.coordinates[this.ballInPortal].y - ballY;
+				this.drawClippedBallInPortal(this.ballInPortal, this.ballOnRightSide);
+
+				this.ball.x = this.coordinates[this.ballOutPortal].x - ballRelativeX;
+				this.ball.y = this.coordinates[this.ballOutPortal].y - ballRelativeY;
+				this.drawClippedBallInPortal(this.ballOutPortal, !this.ballOnRightSide);
+				// check if ball is out of the other side yet
+				let currentPortal = this.pointInsidePortal(ballX, ballY, this.ball.radius/2);
+				if (this.ballInPortal === currentPortal) {
+					this.ball.x = ballX;
+					this.ball.y = ballY;
+				} else {
+					console.log(`out of ${this.ballInPortal}`);
+					this.ballInPortal = null;
+					this.ballEnteredPortal = false;
+				}
+			}
+
+			drawClippedBallInPortal(portal, OnRightSide){
+				this.ctx.save();
+				this.ctx.beginPath();
+				let offsetX = OnRightSide ?  0 :this.width;
+				this.ctx.rect(this.coordinates[portal].x - offsetX, 0, this.width, this.canvas.height);
+				// this.ctx.ellipse(this.coordinates[portal].x,this.coordinates[portal].y, this.width/2, this.height/2, 0, Math.PI * 0.5, Math.PI * 1.5, OnRightSide);
+				this.ctx.closePath();
+				this.ctx.clip();
+				this.ball.draw();
+				this.ctx.restore();
+			}
+
+			drawBall(){
+				if (this.ballInPortal === null) {
+					this.ballInPortal = this.pointInsidePortal(this.ball.x, this.ball.y, this.ball.radius/2);
+					if (this.ballInPortal === null) {
+						this.ball.draw();
+						return;
+					}
+				}
+				this.ballOutPortal = this.ballInPortal === Portal.LEFT ? Portal.RIGHT : Portal.LEFT;
+				this.teleportBall();
+			}
+			tick() {
+				if (this.delay === 0 && this.duration === 0)
+					this.randomizeParams();
+				if (this.delay > 0){
+					this.delay--;
+					this.ball.draw();
+				} else {
+					this.drawPortal();
+					this.duration--;
+				}
+			}
+		}
+
 		var audios=[
 				//p1 score audios
 				[
@@ -247,6 +407,8 @@
 		images.p2.src= "https://image.ibb.co/j3n8B5/p2.png";
 		images.ball= new Image();
 		images.ball.src= "https://image.ibb.co/eVPYdk/ball.png";
+		images.portal = new Image();
+		images.portal.src= "assets/images/portal.png";
 		loadImages();
 
 		function loadImages(){
@@ -306,8 +468,6 @@
 			const maxHeight = (window.innerHeight * WINDOW_HEIGHT_CANVAS_RATIO);
 			let scaledMaxWidth = maxHeight * aspectRatio;
 			let scaleFactor = Math.min(1, maxWidth/scaledMaxWidth);
-			console.log(scaleFactor);
-			console.log(window.innerHeight, maxHeight, maxHeight * scaleFactor);
 			canvas.width=scaledMaxWidth * scaleFactor;
 			canvas.height=maxHeight * scaleFactor;
 
@@ -399,12 +559,15 @@
 			var ball = {
 				x:cWidth/2,
 				y:cHeight/2,
-				xSpeed:-default_speed,
+				xSpeed:-default_speed/5,
 				ySpeed:3,
 				radius:20,
-				color:'red'
+				color:'red',
+				draw : drawBall
 			}
 
+			var portal = new Portal(canvas, ball);
+			console.log(portal);
 			//Controls- functions
 			var pauseMenu= document.getElementById('pauseMenu');
 			var pauseBtn= document.getElementById('pauseBtn');
@@ -525,7 +688,8 @@
 				drawPlayers();
 				scoreBoard();
 				middleLine();
-				moveBall();	
+				moveBall();
+				portal.tick();
 			}
 
 			function drawBG(){
@@ -603,6 +767,7 @@
 				else{
 					p2.points++;
 					ball.xSpeed= -ball.xSpeed; //ball goes to P1's direction
+					console.log("ping");
 				}
 			}
 
@@ -649,17 +814,20 @@
 					p2.checkRange();
 				} 
 			}
-			function moveBall(){
+			function drawBall(){
 				if (themeOn){ //Morty ball
 					ctx.save();
 					ctx.translate(ball.x,ball.y);
-					ctx.rotate(time/6);
+					ctx.rotate((time/50)*ball.xSpeed);
 					ctx.drawImage(images.ball, 0,0,images.ball.width, images.ball.height, -ball.radius, -ball.radius, ball.radius*2, ball.radius*2);
 					ctx.restore();
-				} 
+				}
 				else{ //Red Ball
 					circle(ball.x, ball.y, ball.radius, ball.color);
 				}
+			}
+			function moveBall(){
+				// ball.draw();
 				//if hits horizontal walls, change direction.
 				if((ball.y+ ball.radius > cHeight) || (ball.y -ball.radius < 0)){
 					ball.ySpeed= -ball.ySpeed;
@@ -717,7 +885,6 @@
 						ball.xSpeed -= bottomDist/4;
 						ball.ySpeed = bottomDist/2;
 					}
-					console.log(ball.xSpeed);
 				}
 				//Assure speed threshold is met
 				var minSpeed=2;
