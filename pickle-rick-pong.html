@@ -297,11 +297,19 @@
 			});
 
 			//canvas size
+			const WINDOW_WIDTH_CANVAS_RATIO= 0.7;
+			const WINDOW_HEIGHT_CANVAS_RATIO = 0.9;
 			var ctx=canvas.getContext('2d');
-			var aspectRatio=images.background.width/images.background.height;
 
-			canvas.width=window.innerWidth * 0.7; // 600 * aspectRatio;
-			canvas.height=canvas.width/aspectRatio;
+			const aspectRatio=images.background.width/images.background.height;
+			const maxWidth = (window.innerWidth * WINDOW_WIDTH_CANVAS_RATIO);
+			const maxHeight = (window.innerHeight * WINDOW_HEIGHT_CANVAS_RATIO);
+			let scaledMaxWidth = maxHeight * aspectRatio;
+			let scaleFactor = Math.min(1, maxWidth/scaledMaxWidth);
+			console.log(scaleFactor);
+			console.log(window.innerHeight, maxHeight, maxHeight * scaleFactor);
+			canvas.width=scaledMaxWidth * scaleFactor;
+			canvas.height=maxHeight * scaleFactor;
 
 			//Settings
 			var fps		=	35;
