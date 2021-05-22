@@ -9,8 +9,6 @@ The popular arcade pong with a "Rick and Morty" twist.
 
 My first project as a developer.
 
-I tried to make it in a single file without having to download any audio/images.
-
 :loudspeaker: icon toggles the background music.
 
 Also, the game is designed for children, so I recommend setting the difficulty to hard or insane.
