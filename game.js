@@ -168,38 +168,38 @@ var audios=[
     //p1 score audios
     [
         "https://www.myinstants.com/media/sounds/pickle_rick.mp3", //pickle rick r
-        "http://peal.io/download/74hun", //shum shum shlippity r
-        "http://peal.io/download/kechr", // the way the news goes r
-        "http://peal.io/download/o3b9s", //hit the sack r
-        "http://peal.io/download/fijtn", //wubaluba r
-        "http://peal.io/download/hr8m0", // wrecked son r
-        "http://peal.io/download/h3tlq", // tiny rick r
-        "http://peal.io/download/elcp9", // biach r
-        "http://peal.io/download/beknl",// thank you r
-        "http://peal.io/download/lkwsv", //burger time r
-        "http://peal.io/download/ese2n", //baby bunkers r
-        "http://peal.io/download/n4a6w", //help m
+        "https://peal.io/download/74hun", //shum shum shlippity r
+        "https://peal.io/download/kechr", // the way the news goes r
+        "https://peal.io/download/o3b9s", //hit the sack r
+        "https://peal.io/download/fijtn", //wubaluba r
+        "https://peal.io/download/hr8m0", // wrecked son r
+        "https://peal.io/download/h3tlq", // tiny rick r
+        "https://peal.io/download/elcp9", // biach r
+        "https://peal.io/download/beknl",// thank you r
+        "https://peal.io/download/lkwsv", //burger time r
+        "https://peal.io/download/ese2n", //baby bunkers r
+        "https://peal.io/download/n4a6w", //help m
     ],
     //p2 score audios
     [
-        "http://peal.io/download/eolny", //ooee m
-        "http://peal.io/download/yb659", //OMG m
-        "http://peal.io/download/h6grs", // that's retarded r
-        "http://peal.io/download/eovn2", //my man ?
-        "http://peal.io/download/zau51", //for real m
-        "http://peal.io/download/rttym", //dream bitch r
-        "http://peal.io/download/s2m8i", //whatever r
+        "https://peal.io/download/eolny", //ooee m
+        "https://peal.io/download/yb659", //OMG m
+        "https://peal.io/download/h6grs", // that's retarded r
+        "https://peal.io/download/eovn2", //my man ?
+        "https://peal.io/download/zau51", //for real m
+        "https://peal.io/download/rttym", //dream bitch r
+        "https://peal.io/download/s2m8i", //whatever r
     ],
     //p1 win audios
     [
-        "http://peal.io/download/ldaze", //lick my balls r
-        "http://peal.io/download/6iens", //oh man m
-        "http://peal.io/download/79qmp", // f u god
+        "https://peal.io/download/ldaze", //lick my balls r
+        "https://peal.io/download/6iens", //oh man m
+        "https://peal.io/download/79qmp", // f u god
     ],
     //p2 win audios
     [
-        "http://peal.io/download/n4a6w", //ooo yeah ?
-        "http://peal.io/download/tvqbh"	 //who the fuck are you? r
+        "https://peal.io/download/n4a6w", //ooo yeah ?
+        "https://peal.io/download/tvqbh"	 //who the fuck are you? r
     ]
 ];
 var audioLoaded=false;
@@ -218,7 +218,7 @@ function loadAudio(){
                 $('#audioLoad').text(Math.floor(counter/numOfAudios*100));
                 if(counter==numOfAudios){
                     audioLoaded=true;
-                    isLoaded();
+                    // isLoaded();
                 }
             };
             return audio;
@@ -234,38 +234,39 @@ function loadImages(){
     let numOfImages = imageList.length;
     let counter=0;
     for (img of imageList) {
-
         images[img] = new Image();
         images[img].src = `assets/images/${img}.png`;
-        console.log(images[img].src);
     }
     for (img in images){
         images[img].onload=function(){
             this.imageReady=true;
             counter++;
-            // document.getElementById('imgLoad').innerHTML="Graphics: "+Math.floor(counter/numOfImages*100)+"%";
             $('#imgLoad').text(Math.floor(counter/numOfImages*100));
             if(counter==numOfImages) isLoaded();
         }
     }
 }
+function hideLoadingScreen(){
+    $('#loadingMenu').hide();
+    // $("#loadScreenPlayBtn").hide();
+}
 function isLoaded(){
     var imagesLoaded=true;
+    var skipAudioLoad = true;
     for (img in images){
         if (!images[img].imageReady){
             imagesLoaded=false;
         }
     }
-    if(imagesLoaded && audioLoaded){
-        var loading=document.getElementById('loadingMenu');
-        loading.style.display="none";
-        loading.style.animation="none";
-        playGame();
+    if(imagesLoaded && (audioLoaded||skipAudioLoad)){
+        $("#loadScreenPlayBtn").show();
+        $("#loadScreenPlayBtn").click(playGame);
     }
+
 }
-//window.addEventListener('load',playGame,false);
 
 function playGame(){
+    hideLoadingScreen();
     var canvas=document.getElementById('game_canvas');
 
     $('.input').keydown(setKey);
