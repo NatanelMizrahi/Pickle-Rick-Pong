@@ -4,6 +4,7 @@ The popular arcade pong with a "Rick and Morty" twist.
 
 [Click here to play Pickle Rick Pong](https://pickle-rick-pong.herokuapp.com// "Pickle Rick Pong") in your browser.
 
+![](demo.gif)
 
 **About**
 
